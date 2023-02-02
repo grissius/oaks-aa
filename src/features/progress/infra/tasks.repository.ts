@@ -45,7 +45,6 @@ export class TasksInMemoryRepository implements TasksRepository {
     // TODO: Get last task order-key, order by
     this.tasks.sort((a, b) => orderUnique(a).localeCompare(orderUnique(b)))
     const tasks = this.tasks
-      .filter(t => t.phaseId === phaseId)
       .filter(
         t => !nextPageCursor || orderUnique(t).localeCompare(nextPageCursor) > 0
       )
