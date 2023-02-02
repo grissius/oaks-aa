@@ -34,16 +34,16 @@ describe('Server (integration)', () => {
         "status": "OPEN",
         "tasks": [
           {
-            "displayName": "Buy domains",
+            "displayName": "Set up virtual office",
+          },
+          {
+            "displayName": "Set mission & vision",
           },
           {
             "displayName": "Select business name",
           },
           {
-            "displayName": "Set up virtual office",
-          },
-          {
-            "displayName": "Set mission & vision",
+            "displayName": "Buy domains",
           },
         ],
       },

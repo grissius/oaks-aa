@@ -11,12 +11,12 @@ describe(TasksInMemoryRepository, () => {
 
     const paginate = async (lastId?: string): Promise<Task[]> => {
       const page = await repo.getTasks(phaseA.id, 1, lastId)
-      return page.length === 0
+      return !page.nextPageToken
         ? []
-        : page.concat(...(await paginate(page.at(-1)?.id)))
+        : page.tasks.concat(...(await paginate(page.nextPageToken)))
     }
     const compoundTasks = await paginate()
-    expect(allTasks.length).toBeGreaterThan(0) // Else test not valid
-    expect(allTasks).toEqual(compoundTasks)
+    expect(allTasks.tasks.length).toBeGreaterThan(0) // Else test not valid
+    expect(allTasks.tasks).toEqual(compoundTasks)
   })
 })

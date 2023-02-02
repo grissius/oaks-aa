@@ -1,6 +1,9 @@
 import { randomUUID } from 'crypto'
 import { Progress, Phase, Task } from '../domain/task.entity'
-import { TasksRepository } from '../domain/tasks.repository.port'
+import {
+  GetTasksResponse,
+  TasksRepository,
+} from '../domain/tasks.repository.port'
 
 export class TasksInMemoryRepository implements TasksRepository {
   private progresses: Progress[] = []
@@ -23,9 +26,10 @@ export class TasksInMemoryRepository implements TasksRepository {
     return Promise.all(
       this.phases
         .filter(p => p.progressId === progressId)
+        .sort((a, b) => a.orderKey - b.orderKey)
         .map(async p => ({
           ...p,
-          completed: (await this.getTasks(p.id, this.tasks.length)).every(
+          completed: (await this.getTasks(p.id, this.tasks.length)).tasks.every(
             t => t.completed
           ),
         }))
@@ -35,14 +39,21 @@ export class TasksInMemoryRepository implements TasksRepository {
   async getTasks(
     phaseId: Phase['id'],
     limit = 10,
-    lastTaskId?: Task['id']
-  ): Promise<Task[]> {
+    nextPageCursor?: string
+  ): Promise<GetTasksResponse> {
+    const orderUnique = (t: Task) => `${t.orderKey}:${t.id}`
     // TODO: Get last task order-key, order by
-    this.tasks.sort((a, b) => a.id.localeCompare(b.id))
-    return this.tasks
+    this.tasks.sort((a, b) => orderUnique(a).localeCompare(orderUnique(b)))
+    const tasks = this.tasks
       .filter(t => t.phaseId === phaseId)
-      .filter(t => !lastTaskId || t.id.localeCompare(lastTaskId) > 0)
+      .filter(
+        t => !nextPageCursor || orderUnique(t).localeCompare(nextPageCursor) > 0
+      )
       .slice(0, limit)
+    return {
+      tasks,
+      nextPageToken: (t => (t ? orderUnique(t) : t))(tasks.at(-1)),
+    }
   }
 
   async getTask(taskId: Task['id']): Promise<Task | null> {
@@ -66,11 +77,12 @@ export class TasksInMemoryRepository implements TasksRepository {
       id: progressId,
     }
     const phases = ['Foundation', 'Discovery', 'Delivery'].map(
-      (displayName): Phase => ({
+      (displayName, i): Phase => ({
         displayName,
         id: randomUUID(),
         completed: false,
         progressId: progress.id,
+        orderKey: i,
       })
     )
     const [foundation, discovery, delivery] = phases
@@ -86,11 +98,12 @@ export class TasksInMemoryRepository implements TasksRepository {
       { name: 'Release marketing website', phaseId: delivery.id },
       { name: 'Release MVP', phaseId: delivery.id },
     ].map(
-      (t): Task => ({
+      (t, i): Task => ({
         completed: false,
         displayName: t.name,
         id: randomUUID(),
         phaseId: t.phaseId,
+        orderKey: i,
       })
     )
     return { progress, phases, tasks }

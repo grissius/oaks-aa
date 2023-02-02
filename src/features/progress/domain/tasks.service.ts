@@ -62,8 +62,8 @@ export class TasksService {
   public async getTasks(
     phaseId: Phase['id'],
     limit?: number,
-    lastTaskId?: Task['id']
+    nextPageCursor?: string
   ) {
-    return this.tasksRepo.getTasks(phaseId, limit, lastTaskId)
+    return (await this.tasksRepo.getTasks(phaseId, limit, nextPageCursor)).tasks
   }
 }
