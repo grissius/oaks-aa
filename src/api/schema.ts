@@ -5,10 +5,16 @@ export const typeDefs = `#graphql
     displayName: String
   }
 
+  enum PhaseStatus {
+    COMPLETED
+    OPEN
+    BLOCKED
+  }
+
   type Phase {
     id: ID
-    completed: Boolean
     displayName: String
+    status: PhaseStatus
     tasks(limit: Int): [Task]
   }
 

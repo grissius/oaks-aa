@@ -45,6 +45,14 @@ export class TasksInMemoryRepository implements TasksRepository {
       .slice(0, limit)
   }
 
+  async getTask(taskId: Task['id']): Promise<Task | null> {
+    return this.tasks.find(t => t.id === taskId) ?? null
+  }
+
+  async getPhase(phaseId: Phase['id']): Promise<Phase | null> {
+    return this.phases.find(p => p.id === phaseId) ?? null
+  }
+
   async changeTaskStatus(id: string, completed: boolean): Promise<void> {
     const task = this.tasks.find(t => t.id === id)
     if (task) {
