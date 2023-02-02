@@ -66,3 +66,62 @@ curl --request POST \
   }
 }
 ```
+
+## Requirements check
+
+Entities:
+ - Task: Individual check item
+ - Phase: Task group
+ - Progress: Startup progress list (for multi-tenancy).
+
+For the sake of simplicity of the setup, new progress is auto-created with the default values when requested. Updating the check-list items is not possible through API at this point.
+
+### Functional Requirements
+- **Every phase can have an unlimited amount of tasks.**
+  - The API is ready for large tasks in each phase, content is paginated.
+- **If the startup accomplishes all tasks in the phase, it’s marked as done and unlocks the next phase.**
+  - This is done on the database level. Client knows about state of the phase (if it's unlocked or not).
+- **Tasks cannot be marked as completed unless all tasks in the previous phase were completed.**
+  - This is handled in the service layer
+- **Propose and implement a solution how to reopen (undo) a task.**
+  - Implemented, trivial thanks to the previous step
+
+### Non-Functional Requirements
+- **Pay attention to code structure and architecture. Do not use any frameworks and libraries that provide out-of-box application architecture and file/data structure e.g. NestJS, TypeORM.**
+  - Hexagonal architecture used (ISP, separated domain), vertical layering. Splitting the API into features is a `TODO`.
+- **Create a public repository and publish your code.**
+  - Available here https://github.com/grissius/oaks-aa
+- **Write a few unit tests (no need to cover all the code).**
+  - Repository test + API test implemented
+- **Create a CI/CD pipeline that would run when somebody opens a PR and would prevent merging the PR until tests pass. Create a small PR to demonstrate it and keep the PR open.**
+  - Example run here: https://github.com/grissius/oaks-aa/actions/runs/4077789589/jobs/7027232754
+- **(Optional, bonus) Deploy your code to a cloud service provider (free and with minimum set up) and make sure the API is public and accessible. Send us a link.**
+  - Skipped
+
+### Requirements - Backend (recommended)
+- **Implement a GraphQL API using Node.js, TypeScript**
+  - Done, relevant technologies from stack used
+- **Store the progress in memory (not database)**
+  - Done
+- **Design a database schema to store the data (no need to implement)**
+  - See bellow
+
+
+### Database
+
+![](https://www.plantuml.com/plantuml/png/ZP0zReSm3CNtdC8Nu09C_wbBbzu0cSIYQJuSsKOgGjozeQ2kPOjUtdi_soyr55jBTffYRIXOO4QV5k6r1i-P1KomQl-YQexdB_86XffWTm0nZF3ntXyXQikuJHKBZM3qRLtqN5eceswQcJDXxMBxHANf3BwTGPP0CYNQHeWTSBYRSVaUG9hm8gJwfFAs_jjwkDyDZ-6Qmlq5Xs6_fHVLqE_s0m00)
+
+Assuming there is only a couple of phases per startup, the phase completeness could be done on the query level (draft):
+
+```sql
+SELECT
+  id, ...
+  EXISTS(
+      SELECT 1
+      FROM task t
+      WHERE t.id = id
+      LIMIT 1
+  )
+FROM phase
+WHERE phase.progress_id = :progress_id
+```
