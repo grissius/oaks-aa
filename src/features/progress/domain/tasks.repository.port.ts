@@ -13,7 +13,7 @@ export interface TasksRepository {
   getTasks: (
     phaseId: Phase['id'],
     limit?: number,
-    nextPageCursor?: Task['id']
+    nextPageCursor?: string
   ) => Promise<GetTasksResponse>
   getTask: (taskId: Task['id']) => Promise<Task | null>
   getPhase: (phaseId: Phase['id']) => Promise<Phase | null>
